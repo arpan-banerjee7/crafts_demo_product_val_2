@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3002;
 
 // Middleware to parse JSON in the request body
 app.use(bodyParser.json());
@@ -9,86 +9,88 @@ app.use(bodyParser.json());
 app.post("/user/validate", (req, res) => {
   // Get the user data from the request body
   const userData = req.body;
+  const productId = req.header("productId");
 
-  // Ensure 'id' is included in the response
-  if (!userData.id) {
+  console.log("Validation service 2 called");
+  // Ensure 'userId' is included in the response
+  if (!userData.userId) {
     return res
       .status(400)
       .json({ error: "User ID is missing in the request." });
   }
 
+  if (!productId) {
+    return res
+      .status(400)
+      .json({ error: "Product ID is missing in the request." });
+  }
+
   // Define validation rules for fields
   const validationRules = {
-    "businessProfile.email": {
+    email: {
       validate: (email) => {
         return email && isValidEmail(email);
       },
       errorMessage: "Email is invalid.",
     },
-    "businessProfile.legalName": {
+    legalName: {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Legal name should not be empty.",
     },
-    "businessProfile.taxIdentifiers.pan": {
+    "taxIdentifiers.pan": {
       validate: (pan) => {
         return pan && /^[A-Za-z0-9]{10}$/.test(pan); // Check if 'pan' is 10 alphanumeric characters
       },
       errorMessage: "PAN should be 10 alphanumeric characters.",
     },
-    "businessProfile.taxIdentifiers.ein": {
+    "taxIdentifiers.ein": {
       validate: (ein) => {
         return ein && /^\d{8}$/.test(ein); // Check if 'ein' is 8 digits
       },
       errorMessage: "EIN should be 8 digits.",
     },
-    "businessProfile.email": {
-      validate: (email) => {
-        return email && isValidEmail(email);
-      },
-      errorMessage: "Email is invalid.",
-    },
-    "businessProfile.website": {
+    website: {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Website should not be empty.",
     },
-    "businessProfile.businessAddress.line1": {
+    "businessAddress.line1": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Business address line1 should not be empty.",
     },
-    "businessProfile.businessAddress.city": {
+    "businessAddress.city": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Business address city should not be empty.",
     },
-    "businessProfile.businessAddress.state": {
+    "businessAddress.state": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Business address state should not be empty.",
     },
-    "businessProfile.businessAddress.country": {
+    "businessAddress.country": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Business address country should not be empty.",
     },
-    "businessProfile.businessAddress.zip": {
+    "businessAddress.zip": {
       validate: (zip) => /^\d{5}$/.test(zip),
       errorMessage:
         "Business address zip code should be a valid 5-digit numeric value.",
     },
-    "businessProfile.legalAddress.line1": {
+    "legalAddress.line1": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Legal address line1 should not be empty.",
     },
-    "businessProfile.legalAddress.city": {
+    "legalAddress.city": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Legal address city should not be empty.",
     },
-    "businessProfile.legalAddress.state": {
+    "legalAddress.state": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Legal address state should not be empty.",
     },
-    "businessProfile.legalAddress.country": {
+    "legalAddress.country": {
       validate: (value) => value && value.trim() !== "",
       errorMessage: "Legal address country should not be empty.",
     },
-    "businessProfile.legalAddress.zip": {
+    "legalAddress.zip": {
       validate: (zip) => /^\d{5}$/.test(zip),
       errorMessage:
         "Legal address zip code should be a valid 5-digit numeric value.",
@@ -110,12 +112,18 @@ app.post("/user/validate", (req, res) => {
   }
 
   if (validationErrors.length > 0) {
-    return res
-      .status(400)
-      .json({ errors: validationErrors, userId: userData.id });
+    return res.status(400).json({
+      errors: validationErrors,
+      userId: userData.userId,
+      productId: productId,
+    });
   }
 
-  res.json({ message: "User data is valid.", userId: userData.id });
+  res.json({
+    message: "User data is valid.",
+    userId: userData.userId,
+    productId: productId,
+  });
 });
 
 // Helper function to get a nested field by path
